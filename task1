@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SVG Drawing with Eraser</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 30px;
+    }
+
+    .toolbar {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .active {
+      background-color: #333;
+      color: #fff;
+    }
+
+    svg {
+      display: block;
+      margin: auto;
+      background: #fff;
+      border: 2px solid #333;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button id="drawBtn" class="active">✏️ Draw</button>
+    <button id="eraseBtn">🧽 Erase</button>
+    <button id="clearBtn">🗑 Clear</button>
+  </div>
+
+  <!-- Drawing Area -->
+  <svg id="drawingBoard" width="800" height="400"></svg>
+
+  <script>
+    const drawingBoard = document.getElementById("drawingBoard");
+
+    const drawBtn = document.getElementById("drawBtn");
+    const eraseBtn = document.getElementById("eraseBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    let isMouseDown = false;
+    let isEraseMode = false;
+
+    let lastX = 0;
+    let lastY = 0;
+
+    function getMousePosition(event) {
+      const rect = drawingBoard.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    // ---- MODE SWITCHING ----
+    drawBtn.onclick = () => {
+      isEraseMode = false;
+      drawBtn.classList.add("active");
+      eraseBtn.classList.remove("active");
+    };
+
+    eraseBtn.onclick = () => {
+      isEraseMode = true;
+      eraseBtn.classList.add("active");
+      drawBtn.classList.remove("active");
+    };
+
+    clearBtn.onclick = () => {
+      drawingBoard.innerHTML = "";
+    };
+
+    // ---- DRAWING LOGIC ----
+    drawingBoard.addEventListener("mousedown", (event) => {
+      isMouseDown = true;
+
+      const point = getMousePosition(event);
+      lastX = point.x;
+      lastY = point.y;
+    });
+
+    drawingBoard.addEventListener("mousemove", (event) => {
+      if (!isMouseDown || isEraseMode) return;
+
+      const current = getMousePosition(event);
+
+      const line = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line"
+      );
+
+      line.setAttribute("x1", lastX);
+      line.setAttribute("y1", lastY);
+      line.setAttribute("x2", current.x);
+      line.setAttribute("y2", current.y);
+
+      line.setAttribute("stroke", "black");
+      line.setAttribute("stroke-width", "2");
+      line.setAttribute("stroke-linecap", "round");
+
+      // Erase on hover when in eraser mode
+      line.addEventListener("mouseenter", () => {
+        if (isEraseMode && isMouseDown) {
+          line.remove();
+        }
+      });
+
+      drawingBoard.appendChild(line);
+
+      lastX = current.x;
+      lastY = current.y;
+    });
+
+    drawingBoard.addEventListener("mouseup", () => {
+      isMouseDown = false;
+    });
+
+    drawingBoard.addEventListener("mouseleave", () => {
+      isMouseDown = false;
+    });
+  </script>
+
+</body>
+</html>
